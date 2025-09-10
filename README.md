@@ -1,5 +1,5 @@
 # The Visionaries 
-# VITERN
+VITERN
 
  There are many ways to find internships or part time jobs but none of them are dedicated only for students , we are proposing the idea of making a dedicated website for only students that is curently exclusive for VIT students at the moment . The importance of the website is that it is place where we would have only students and the recruiters would get fresh talents directly from the students itself o Best way to find more opportunities and experience as a student o No other platform is working only for students
 
