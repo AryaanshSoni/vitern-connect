@@ -1,17 +1,26 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Mail, Lock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const StudentLogin = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate('/');
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +37,33 @@ const StudentLogin = () => {
       return;
     }
 
-    // Simulate login process
-    setTimeout(() => {
-      toast({
-        title: "Login Successful!",
-        description: "Welcome back to VITERN"
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Magic Link Sent!",
+        description: "Check your email for a sign-in link"
+      });
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: error.message || "Failed to send magic link. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard would happen here
-    }, 2000);
+    }
   };
 
   return (
@@ -73,31 +100,14 @@ const StudentLogin = () => {
                     required
                   />
                 </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-muted-foreground" size={20} />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 py-3 rounded-xl border-2 focus:border-primary"
-                    required
-                  />
                 </div>
-              </div>
 
-              {/* Forgot Password */}
-              <div className="text-right">
-                <Link to="/student/forgot-password" className="text-primary hover:text-primary-dark text-sm">
-                  Forgot Password?
-                </Link>
-              </div>
+                {/* Forgot Password */}
+                <div className="text-right">
+                  <span className="text-muted-foreground text-sm">
+                    We'll send you a magic link to sign in
+                  </span>
+                </div>
 
               {/* Submit Button */}
               <Button 
@@ -105,7 +115,7 @@ const StudentLogin = () => {
                 className="w-full btn-hero py-3 text-lg" 
                 disabled={isLoading}
               >
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? "Sending Magic Link..." : "Send Magic Link"}
               </Button>
             </form>
 
